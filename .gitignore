@@ -1,0 +1,16 @@
+target/
+build/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.quarkus/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+dependency-check-report.*

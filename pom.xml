@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>dev.quicknote</groupId>
+  <artifactId>quick-note</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>Quick Note — Note Management API</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>25</maven.compiler.release>
+
+    <!-- Every version is pinned explicitly. Nothing floats, nothing is inherited by accident. -->
+    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+    <quarkus.platform.version>3.38.3</quarkus.platform.version>
+
+    <bucket4j.version>8.10.1</bucket4j.version>
+    <caffeine.version>3.2.4</caffeine.version>
+    <archunit.version>1.5.0</archunit.version>
+    <assertj.version>3.27.7</assertj.version>
+    <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
+
+    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
+    <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+    <spotless-maven-plugin.version>3.10.0</spotless-maven-plugin.version>
+    <dependency-check-maven.version>13.0.0</dependency-check-maven.version>
+    <gatling-maven-plugin.version>4.21.11</gatling-maven-plugin.version>
+    <gatling.version>3.15.1</gatling.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- Transport -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-rest</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-rest-jackson</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-hibernate-validator</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-smallrye-openapi</artifactId></dependency>
+
+    <!-- Persistence -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-hibernate-orm-panache</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-jdbc-postgresql</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-flyway</artifactId></dependency>
+    <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency>
+
+    <!-- Security: verify credentials, never issue them -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-oidc</artifactId></dependency>
+
+    <!-- Observability -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-smallrye-health</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-micrometer-registry-prometheus</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-logging-json</artifactId></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-opentelemetry</artifactId></dependency>
+
+    <!-- Scheduling: clustered so the retention sweep runs exactly once -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-quartz</artifactId></dependency>
+
+    <!-- Config -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-arc</artifactId></dependency>
+
+    <!-- Rate limiting (not BOM-managed) -->
+    <dependency>
+      <groupId>com.bucket4j</groupId><artifactId>bucket4j-core</artifactId><version>${bucket4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><version>${caffeine.version}</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-junit</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>io.rest-assured</groupId><artifactId>rest-assured</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-test-security-oidc</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-test-keycloak-server</artifactId><scope>test</scope></dependency>
+    <!-- @QuarkusTest runs the application in its own classloader; without this extension the agent
+         measures the wrong classes and reports zero coverage for code the tests clearly exercise. -->
+    <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-jacoco</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>${assertj.version}</version><scope>test</scope></dependency>
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId>
+      <version>${archunit.version}</version><scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId><artifactId>snakeyaml</artifactId><scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.gatling.highcharts</groupId><artifactId>gatling-charts-highcharts</artifactId>
+      <version>${gatling.version}</version><scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.atlassian.oai</groupId><artifactId>openapi-request-validator-restassured</artifactId>
+      <version>${openapi-request-validator.version}</version><scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <goals><goal>build</goal><goal>generate-code</goal><goal>generate-code-tests</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <systemPropertyVariables>
+            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+            <maven.home>${maven.home}</maven.home>
+          </systemPropertyVariables>
+          <!-- Latency numbers are meaningless on a contended CI box, so they are opt-in. -->
+          <excludes>
+            <exclude>**/perf/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <!-- T004: formatting violations fail the build -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless-maven-plugin.version}</version>
+        <configuration>
+          <java>
+            <palantirJavaFormat/>
+            <removeUnusedImports/>
+            <importOrder><order>java,javax,jakarta,,dev.quicknote</order></importOrder>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+          </java>
+        </configuration>
+        <executions>
+          <execution><id>spotless-check</id><phase>verify</phase><goals><goal>check</goal></goals></execution>
+        </executions>
+      </plugin>
+
+      <!-- T005: 80% overall; 100% on authn, authz, and input-validation paths -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
+        <executions>
+          <execution><id>prepare-agent</id><goals><goal>prepare-agent</goal></goals></execution>
+          <!-- Plain unit tests and @QuarkusTest write separate files; the gate must see both. -->
+          <execution>
+            <id>merge-coverage</id><phase>verify</phase><goals><goal>merge</goal></goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <directory>${project.build.directory}</directory>
+                  <includes><include>jacoco.exec</include><include>jacoco-quarkus.exec</include></includes>
+                </fileSet>
+              </fileSets>
+              <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+            </configuration>
+          </execution>
+          <execution>
+            <id>coverage-report</id><phase>verify</phase><goals><goal>report</goal></goals>
+            <configuration><dataFile>${project.build.directory}/jacoco-merged.exec</dataFile></configuration>
+          </execution>
+          <execution>
+            <id>coverage-gates</id><phase>verify</phase><goals><goal>check</goal></goals>
+            <configuration>
+              <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits><limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.80</minimum></limit></limits>
+                </rule>
+                <rule>
+                  <element>PACKAGE</element>
+                  <includes>
+                    <include>dev.quicknote.security*</include>
+                    <include>dev.quicknote.notes.application*</include>
+                    <include>dev.quicknote.notes.api.dto*</include>
+                    <include>dev.quicknote.shared.pagination*</include>
+                    <include>dev.quicknote.shared.problem*</include>
+                  </includes>
+                  <limits><limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>1.00</minimum></limit></limits>
+                </rule>
+                <rule>
+                  <element>CLASS</element>
+                  <includes>
+                    <include>dev.quicknote.notes.domain.Note</include>
+                    <include>dev.quicknote.notes.domain.Label</include>
+                  </includes>
+                  <limits><limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>1.00</minimum></limit></limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- T006: any high or critical advisory blocks the build -->
+    <profile>
+      <id>security</id>
+      <build><plugins>
+        <plugin>
+          <groupId>org.owasp</groupId><artifactId>dependency-check-maven</artifactId>
+          <version>${dependency-check-maven.version}</version>
+          <configuration><failBuildOnCVSS>7.0</failBuildOnCVSS><assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled></configuration>
+          <executions><execution><goals><goal>check</goal></goals></execution></executions>
+        </plugin>
+      </plugins></build>
+    </profile>
+
+    <!-- Load and latency tests only run here -->
+    <profile>
+      <id>perf</id>
+      <build><plugins>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <excludes combine.self="override"/>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>io.gatling</groupId><artifactId>gatling-maven-plugin</artifactId>
+          <version>${gatling-maven-plugin.version}</version>
+        </plugin>
+      </plugins></build>
+    </profile>
+
+    <profile>
+      <id>native</id>
+      <activation><property><name>native</name></property></activation>
+      <properties><quarkus.native.enabled>true</quarkus.native.enabled></properties>
+    </profile>
+  </profiles>
+</project>
